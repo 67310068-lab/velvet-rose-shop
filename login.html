@@ -1,0 +1,47 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+  <meta charset="UTF-8">
+  <title>เข้าสู่ระบบ - Velvet Rose Beauty</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-rose-50 min-h-screen flex items-center justify-center p-4">
+  <div class="bg-white p-8 rounded-2xl shadow-xl w-full max-w-md">
+    <h2 class="text-2xl font-bold text-rose-600 text-center mb-6">เข้าสู่ระบบ Velvet Rose</h2>
+    <form id="login-form" class="space-y-4">
+      <div>
+        <label class="block text-sm font-semibold text-gray-700">อีเมล</label>
+        <input type="email" id="email" required class="w-full mt-1 p-2.5 border rounded-lg focus:ring-2 focus:ring-rose-400 outline-none">
+      </div>
+      <div>
+        <label class="block text-sm font-semibold text-gray-700">รหัสผ่าน</label>
+        <input type="password" id="password" required class="w-full mt-1 p-2.5 border rounded-lg focus:ring-2 focus:ring-rose-400 outline-none">
+      </div>
+      <button type="submit" class="w-full bg-rose-600 text-white py-3 rounded-lg font-bold hover:bg-rose-700">เข้าสู่ระบบ</button>
+    </form>
+    <p class="text-center text-sm text-gray-500 mt-4">ยังไม่มีบัญชี? <a href="register.html" class="text-rose-600 font-bold">สมัครสมาชิก</a></p>
+  </div>
+
+  <script>
+    document.getElementById('login-form').addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const res = await fetch('http://localhost:5000/api/auth/login', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          email: document.getElementById('email').value,
+          password: document.getElementById('password').value
+        })
+      });
+
+      const data = await res.json();
+      alert(data.message);
+      if (res.ok) {
+        localStorage.setItem('token', data.token);
+        localStorage.setItem('userName', data.name);
+        window.location.href = 'index.html';
+      }
+    });
+  </script>
+</body>
+</html>

@@ -1,0 +1,131 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>สมัครสมาชิก - Velvet Rose Beauty</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link href="https://fonts.googleapis.com/css2?family=Prompt:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+  <style>
+    body { font-family: 'Prompt', sans-serif; background-color: #F6F3ED; }
+  </style>
+</head>
+<body class="flex items-center justify-center min-h-screen p-4">
+
+  <div class="w-full max-w-md p-8 bg-white rounded-3xl shadow-2xl border border-[#EFE8DE]">
+    <h2 class="text-3xl font-black text-center text-[#581C25] mb-1 tracking-wider">VELVET ROSE</h2>
+    <p class="text-center text-[#8C7074] text-xs font-medium mb-6">สมัครสมาชิกเพื่อเริ่มต้นการใช้งาน</p>
+
+    <!-- 1. ฟอร์มกรอกข้อมูลสมัคร -->
+    <form id="registerForm" class="space-y-4">
+      <div>
+        <label class="block text-xs font-bold text-[#581C25] mb-1">ชื่อ-นามสกุล</label>
+        <input type="text" id="name" required class="w-full px-4 py-2.5 rounded-xl border border-gray-200 focus:outline-none focus:ring-2 focus:ring-[#8C2435]/30 focus:border-[#8C2435] bg-[#F6F3ED]">
+      </div>
+
+      <div>
+        <label class="block text-xs font-bold text-[#581C25] mb-1">อีเมลจริง (รับรหัส OTP)</label>
+        <input type="email" id="email" required class="w-full px-4 py-2.5 rounded-xl border border-gray-200 focus:outline-none focus:ring-2 focus:ring-[#8C2435]/30 focus:border-[#8C2435] bg-[#F6F3ED]">
+      </div>
+
+      <div>
+        <label class="block text-xs font-bold text-[#581C25] mb-1">รหัสผ่าน</label>
+        <input type="password" id="password" required class="w-full px-4 py-2.5 rounded-xl border border-gray-200 focus:outline-none focus:ring-2 focus:ring-[#8C2435]/30 focus:border-[#8C2435] bg-[#F6F3ED]">
+      </div>
+
+      <button type="submit" id="submitBtn" class="w-full py-3 bg-[#681322] hover:bg-[#500E1A] text-white font-bold rounded-xl transition shadow-lg active:scale-95">
+        รับรหัส OTP ผ่านอีเมล
+      </button>
+    </form>
+
+    <!-- 2. ฟอร์มกรอกรหัส OTP (สลับแสดงผลทันทีอัตโนมัติ) -->
+    <form id="otpForm" class="space-y-4 hidden">
+      <div class="p-4 bg-[#F6F3ED] border border-[#EFE8DE] rounded-2xl text-center">
+        <p class="text-xs text-[#8C7074]">ระบบได้ส่งรหัส OTP 6 หลัก ไปที่อีเมล</p>
+        <p id="targetEmail" class="font-bold text-[#581C25] text-sm mt-1"></p>
+      </div>
+
+      <div>
+        <label class="block text-xs font-bold text-[#581C25] mb-1 text-center">กรอกรหัส OTP 6 หลัก</label>
+        <input type="text" id="otpInput" maxlength="6" required placeholder="••••••" class="w-full text-center text-3xl font-black tracking-widest px-4 py-3 rounded-2xl border border-gray-200 focus:outline-none focus:ring-2 focus:ring-[#8C2435]/30 focus:border-[#8C2435] bg-[#F6F3ED]">
+      </div>
+
+      <button type="submit" id="verifyBtn" class="w-full py-3 bg-[#681322] hover:bg-[#500E1A] text-white font-bold rounded-xl transition shadow-lg active:scale-95">
+        ยืนยันรหัส OTP
+      </button>
+    </form>
+
+    <p class="mt-6 text-center text-xs text-[#8C7074]">
+      มีบัญชีอยู่แล้ว? <a href="index.html" class="text-[#8C2435] font-bold hover:underline">เข้าสู่หน้าหลัก</a>
+    </p>
+  </div>
+
+  <script>
+    const registerForm = document.getElementById('registerForm');
+    const otpForm = document.getElementById('otpForm');
+    const submitBtn = document.getElementById('submitBtn');
+    const targetEmail = document.getElementById('targetEmail');
+
+    let userEmail = '';
+
+    registerForm.addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const name = document.getElementById('name').value;
+      const email = document.getElementById('email').value;
+      const password = document.getElementById('password').value;
+
+      userEmail = email;
+      submitBtn.disabled = true;
+      submitBtn.innerText = 'กำลังส่ง OTP...';
+
+      try {
+        const res = await fetch('http://localhost:5000/api/auth/register', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ name, email, password })
+        });
+
+        const data = await res.json();
+
+        if (res.ok) {
+          registerForm.classList.add('hidden');
+          otpForm.classList.remove('hidden');
+          targetEmail.innerText = email;
+        } else {
+          alert(data.message || 'เกิดข้อผิดพลาดในการส่งข้อมูล');
+        }
+      } catch (err) {
+        alert('ไม่สามารถเชื่อมต่อเซิร์ฟเวอร์ได้: ' + err.message);
+      } finally {
+        submitBtn.disabled = false;
+        submitBtn.innerText = 'รับรหัส OTP ผ่านอีเมล';
+      }
+    });
+
+    otpForm.addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const otp = document.getElementById('otpInput').value;
+
+      try {
+        const res = await fetch('http://localhost:5000/api/auth/verify-otp', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ email: userEmail, otp })
+        });
+
+        const data = await res.json();
+
+        if (res.ok) {
+          localStorage.setItem('token', data.token);
+          localStorage.setItem('userName', data.name);
+          window.location.href = 'index.html';
+        } else {
+          alert(data.message || 'รหัส OTP ไม่ถูกต้อง');
+        }
+      } catch (err) {
+        alert('เกิดข้อผิดพลาด: ' + err.message);
+      }
+    });
+  </script>
+</body>
+</html>

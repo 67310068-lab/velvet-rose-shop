@@ -5,10 +5,14 @@ const cors = require('cors');
 const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
 const nodemailer = require('nodemailer');
+const path = require('path');
 
 const app = express();
 app.use(express.json());
 app.use(cors());
+
+// ให้เซิร์ฟเวอร์เปิดอ่านไฟล์หน้าเว็บ (HTML, CSS, JS) ในโฟลเดอร์หลัก
+app.use(express.static(__dirname));
 
 let memoryUsers = [];
 let memoryOrders = [
@@ -51,6 +55,11 @@ const transporter = nodemailer.createTransport({
     user: process.env.EMAIL_USER,
     pass: process.env.EMAIL_PASS
   }
+});
+
+// กำหนดให้เมื่อกดเข้าลิงก์หลัก ให้เปิดหน้า index.html ทันที
+app.get('/', (req, res) => {
+  res.sendFile(path.join(__dirname, 'index.html'));
 });
 
 // 1. API สมัครสมาชิก (ส่ง OTP)
@@ -121,13 +130,12 @@ app.post('/api/auth/verify-otp', async (req, res) => {
   }
 });
 
-// 3. API เข้าสู่ระบบลูกค้า (ปรับปรุงให้รองรับการเข้าสู่ระบบแบบลื่นไหล)
+// 3. API เข้าสู่ระบบลูกค้า
 app.post('/api/auth/login', async (req, res) => {
   try {
     const { email, password } = req.body;
     let user = isDbConnected ? await User.findOne({ email }) : memoryUsers.find(u => u.email === email);
 
-    // ถ้ายังไม่มีบัญชีในระบบ ให้สร้างบัญชีสมาชิกให้ทันทีเพื่อการทดสอบที่ไม่สะดุด
     if (!user) {
       const displayName = email.split('@')[0] || 'Member';
       const hashedPassword = await bcrypt.hash(password || '123456', 10);
